@@ -3,13 +3,17 @@ package main
 import (
 	"fmt"
 	"strings"
-	// sv "sync"
-	// c "github.com/gocolly/colly"
+	"sync"
+
+	"github.com/gocolly/colly"
 )
 
 type Stock struct {
 	ticker string
 	ratio  uint8
+	price  float32
+	change float32
+	date   string
 }
 
 func getStocks() []Stock {
@@ -37,25 +41,67 @@ func getStocks() []Stock {
 			} else {
 				newStock.ratio = userRatio
 				portfolioRatioTotal += userRatio
-				break // Allows you to proceede if your ratio of the stock is valid
+				break // Allows you to procede if your ratio of the stock is valid
 			}
 		}
-		// Apply the ratio to the "Stock" object and incrament the portfolioRatioTotal counter
+		// Apply the ratio to the "Stock" object and increment the portfolioRatioTotal counter
 		// Finally, append the stock to the "stocks" slice
 		stockList = append(stockList, newStock)
 		if portfolioRatioTotal == 100 {
-			break // Exits once we have enetred all our stock options
+			break // Exits once we have entered all our stock options
 		}
 	}
 	return stockList
 }
 
-func main() {
+func getStockData(stockType *Stock) []Stock {
+	// Use the colly package to fetch the stock data here.
+	dataCollector := colly.NewCollector()
+	stockDataList := []Stock{}
+	/* You'll need to fill in the details based on how you're fetching the data.
+	Below will be a loop to process all the data from collectedData and transform
+	it into something useable by stockDataList. Process will probably be something like
 
+	dataCollector.OnHTML("div#quote-header-info", func(e *colly.HTMLElement){
+		var firststepStockData Stock
+		firststepStockData.ticker =
+		firststepStockData.price =
+		firststepStockData.change =
+		firststepStockData.date =
+
+	})
+
+	for index,
+
+	where we have to get the stocks oldest data, when get the differnce between oldest
+	time and now, and then get all the other monthly data in a loop and then append
+	that data to stockDataList.
+	*/
+	// Once you've fetched the data, you can return the stockDataList
+	return stockDataList
+}
+
+func worker(id int, wg *sync.WaitGroup, mu *sync.Mutex, operatedStock *Stock, listOfData [][]Stock) {
+	defer wg.Done()
+	// Fetch the stock data.
+	fetchedStockData := getStockData(operatedStock)
+	// Lock and Unlock data for appending
+	mu.Lock()
+	listOfData = append(listOfData, fetchedStockData)
+	mu.Unlock()
+}
+
+func main() {
+	// get user selected stocks
 	stocks := getStocks()
+	collectedStockData := [][]Stock{}
+
+	var wg sync.WaitGroup
+	var mu sync.Mutex
 
 	for index, stock := range stocks {
-		fmt.Printf("Index: %d, Stock %s, Ratio %d\n", index, stock.ticker, stock.ratio)
+		wg.Add(1)
+		go worker(index, &wg, &mu, &stock, collectedStockData)
 	}
 
 }
