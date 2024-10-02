@@ -44,7 +44,7 @@ func getStocks() []Stock {
 		// Finally, append the stock to the "stocks" slice
 		stockList = append(stockList, newStock)
 		if portfolioRatioTotal == 100 {
-			break // Exits once we have enetred all our stock options and
+			break // Exits once we have enetred all our stock options
 		}
 	}
 	return stockList
