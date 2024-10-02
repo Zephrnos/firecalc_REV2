@@ -1,6 +1,8 @@
 package main
 
 import (
+	"FIRECALC_REV2/stock"
+	//"FIRECALC_REV2/worker"
 	"fmt"
 	"strings"
 	"sync"
@@ -8,16 +10,8 @@ import (
 	"github.com/gocolly/colly"
 )
 
-type Stock struct {
-	ticker string
-	ratio  uint8
-	price  float32
-	change float32
-	date   string
-}
-
-func getStocks() []Stock {
-	stockList := []Stock{}
+func getStocks() []stock.Stock {
+	stockList := []stock.Stock{}
 	var userStock string
 	var portfolioRatioTotal uint8 = 0
 	for {
@@ -28,8 +22,8 @@ func getStocks() []Stock {
 			break // Exit loop when done entering stocks and the ratios
 		}
 		// Apply the stock ticker to a "Stock" object
-		newStock := Stock{
-			ticker: userStock,
+		newStock := stock.Stock{
+			Ticker: userStock,
 		}
 		// Get the ratio of the stock to the portfolio
 		for {
@@ -39,7 +33,7 @@ func getStocks() []Stock {
 			if (portfolioRatioTotal+userRatio) > 100 || userRatio == 0 {
 				fmt.Printf("Not a valid ratio, you have %d percent ratio left. Please try again.", 100-portfolioRatioTotal)
 			} else {
-				newStock.ratio = userRatio
+				newStock.Ratio = userRatio
 				portfolioRatioTotal += userRatio
 				break // Allows you to procede if your ratio of the stock is valid
 			}
@@ -54,10 +48,12 @@ func getStocks() []Stock {
 	return stockList
 }
 
-func getStockData(stockType *Stock) []Stock {
+func getStockData(stockType *stock.Stock) []stock.Stock {
 	// Use the colly package to fetch the stock data here.
 	dataCollector := colly.NewCollector()
-	stockDataList := []Stock{}
+	stockDataList := []stock.Stock{}
+	var wg sync.WaitGroup
+	var mu sync.Mutex
 	/* You'll need to fill in the details based on how you're fetching the data.
 	Below will be a loop to process all the data from collectedData and transform
 	it into something useable by stockDataList. Process will probably be something like
@@ -81,20 +77,20 @@ func getStockData(stockType *Stock) []Stock {
 	return stockDataList
 }
 
-func worker(id int, wg *sync.WaitGroup, mu *sync.Mutex, operatedStock *Stock, listOfData [][]Stock) {
+func worker(id int, wg *sync.WaitGroup, mu *sync.Mutex, operatedStock *stock.Stock, listOfData [][]stock.Stock) {
+	defer mu.Unlock()
 	defer wg.Done()
 	// Fetch the stock data.
 	fetchedStockData := getStockData(operatedStock)
 	// Lock and Unlock data for appending
 	mu.Lock()
 	listOfData = append(listOfData, fetchedStockData)
-	mu.Unlock()
 }
 
 func main() {
 	// get user selected stocks
 	stocks := getStocks()
-	collectedStockData := [][]Stock{}
+	collectedStockData := [][]stock.Stock{}
 
 	var wg sync.WaitGroup
 	var mu sync.Mutex
