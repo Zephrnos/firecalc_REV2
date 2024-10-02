@@ -1,13 +1,11 @@
 package main
 
 import (
-	"FIRECALC_REV2/stock"
 	//"FIRECALC_REV2/worker"
+	"FIRECALC_REV2/stock"
 	"fmt"
 	"strings"
 	"sync"
-
-	"github.com/gocolly/colly"
 )
 
 func getStocks() []stock.Stock {
@@ -49,35 +47,18 @@ func getStocks() []stock.Stock {
 }
 
 func getStockData(stockType *stock.Stock) []stock.Stock {
-	// Use the colly package to fetch the stock data here.
-	dataCollector := colly.NewCollector()
 	stockDataList := []stock.Stock{}
 	var wg sync.WaitGroup
-	var mu sync.Mutex
-	/* You'll need to fill in the details based on how you're fetching the data.
-	Below will be a loop to process all the data from collectedData and transform
-	it into something useable by stockDataList. Process will probably be something like
 
-	dataCollector.OnHTML("div#quote-header-info", func(e *colly.HTMLElement){
-		var firststepStockData Stock
-		firststepStockData.ticker =
-		firststepStockData.price =
-		firststepStockData.change =
-		firststepStockData.date =
+	for index, temp := range temp {
+		workedStock := worker.DataGetter
 
-	})
+	}
 
-	for index,
-
-	where we have to get the stocks oldest data, when get the differnce between oldest
-	time and now, and then get all the other monthly data in a loop and then append
-	that data to stockDataList.
-	*/
-	// Once you've fetched the data, you can return the stockDataList
 	return stockDataList
 }
 
-func worker(id int, wg *sync.WaitGroup, mu *sync.Mutex, operatedStock *stock.Stock, listOfData [][]stock.Stock) {
+func workStockData(id int, wg *sync.WaitGroup, mu *sync.Mutex, operatedStock *stock.Stock, listOfData [][]stock.Stock) {
 	defer mu.Unlock()
 	defer wg.Done()
 	// Fetch the stock data.
@@ -97,7 +78,7 @@ func main() {
 
 	for index, stock := range stocks {
 		wg.Add(1)
-		go worker(index, &wg, &mu, &stock, collectedStockData)
+		go workStockData(index, &wg, &mu, &stock, collectedStockData)
 	}
 
 }
