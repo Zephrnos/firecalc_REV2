@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"strings"
 	"sync"
-	"time"
 )
 
 func getStocks() []stock.Stock {
@@ -58,10 +57,11 @@ func main() {
 	for index := range stocklist {
 		stocklistWG.Add(1)
 		go func(stock stock.Stock) {
+
 			defer stocklistWG.Done()
 			stocklistRWMU.RLock()
 			defer stocklistRWMU.RUnlock()
-			fmt.Printf("Goroutine: %v\n", time.Now())
+
 			stockToGetData := datagetter.DataGetter{
 				Stock:     stock,
 				RWMutex:   &stocklistRWMU,
