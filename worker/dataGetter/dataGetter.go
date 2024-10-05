@@ -10,16 +10,14 @@ import (
 )
 
 type DataGetter struct {
-	Id        uint
-	Ticker    string
+	Stock     stock.Stock
 	RWMutex   *sync.RWMutex
 	Waitgroup *sync.WaitGroup
-	DataList  *[]stock.Stock
 }
 
 func (g *DataGetter) WorkData() {
 	// Implement your getter logic here
-	getHTML(g.Ticker)
+	getHTML(g.Stock.Ticker)
 }
 
 func urlTickerPage(ticker string) string {

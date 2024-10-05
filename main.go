@@ -1,11 +1,12 @@
 package main
 
 import (
-	//"FIRECALC_REV2/worker"
 	"FIRECALC_REV2/stock"
+	datagetter "FIRECALC_REV2/worker/dataGetter"
 	"fmt"
 	"strings"
 	"sync"
+	"time"
 )
 
 func getStocks() []stock.Stock {
@@ -46,39 +47,31 @@ func getStocks() []stock.Stock {
 	return stockList
 }
 
-func getStockData(stockType *stock.Stock) []stock.Stock {
-	stockDataList := []stock.Stock{}
-	var wg sync.WaitGroup
-
-	for index, temp := range temp {
-		workedStock := worker.DataGetter
-
-	}
-
-	return stockDataList
-}
-
-func workStockData(id int, wg *sync.WaitGroup, mu *sync.Mutex, operatedStock *stock.Stock, listOfData [][]stock.Stock) {
-	defer mu.Unlock()
-	defer wg.Done()
-	// Fetch the stock data.
-	fetchedStockData := getStockData(operatedStock)
-	// Lock and Unlock data for appending
-	mu.Lock()
-	listOfData = append(listOfData, fetchedStockData)
-}
-
 func main() {
 	// get user selected stocks
-	stocks := getStocks()
-	collectedStockData := [][]stock.Stock{}
+	stocklist := getStocks()
+	//collectedStockData := [][]stock.Stock{}
 
-	var wg sync.WaitGroup
-	var mu sync.Mutex
+	var stocklistWG sync.WaitGroup
+	var stocklistRWMU sync.RWMutex
 
-	for index, stock := range stocks {
-		wg.Add(1)
-		go workStockData(index, &wg, &mu, &stock, collectedStockData)
+	for index := range stocklist {
+		stocklistWG.Add(1)
+		go func(stock stock.Stock) {
+			defer stocklistWG.Done()
+			stocklistRWMU.RLock()
+			defer stocklistRWMU.RUnlock()
+			fmt.Printf("Goroutine: %v\n", time.Now())
+			stockToGetData := datagetter.DataGetter{
+				Stock:     stock,
+				RWMutex:   &stocklistRWMU,
+				Waitgroup: &stocklistWG,
+			}
+
+			stockToGetData.WorkData()
+		}(stocklist[index])
 	}
+
+	stocklistWG.Wait()
 
 }

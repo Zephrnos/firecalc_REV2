@@ -6,11 +6,9 @@ import (
 )
 
 type DataWorker struct {
-	Id        uint
-	Ticker    string
+	Stock     *stock.Stock
 	Waitgroup *sync.WaitGroup
 	Mutex     *sync.Mutex
-	Stock     *stock.Stock
 	DataList  *[][]stock.Stock
 }
 
